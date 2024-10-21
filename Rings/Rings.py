@@ -9,20 +9,23 @@ url = 'https://darksouls.fandom.com/wiki/Rings_(Dark_Souls)'
 response = requests.get(url)
 soup = BeautifulSoup(response.content, 'html.parser')
 
-# Find all sections that might contain the rings (In fandom pages, lists are often in 'li' tags)
-ring_sections = soup.find_all('div', {'class': 'mw-parser-output'})
+# Check the content within the main body section of the wiki page
+content_section = soup.find('div', {'class': 'mw-parser-output'})
 
-# Extract information from these sections
+# Initialize a list to hold ring data
 rings = []
 
-for section in ring_sections:
-    items = section.find_all('li')  # This will find each list item
-    for item in items:
-        ring_name = item.find('a').text if item.find('a') else 'Unknown'  # Some items may not have a link
-        description = item.text.strip()  # The text inside the <li>
+# Search for the specific section(s) containing ring information
+# Look for headers or sections indicating each ring's data, sometimes within <h3>, <h2>, or <div> tags
+for item in content_section.find_all(['h3', 'h2', 'div', 'p']):  # Adjust based on correct HTML tags
+    ring_name = item.find('a').text if item.find('a') else 'Unknown'
+    description = item.text.strip() if item else 'No description'
+    
+    # Add extracted ring data to the list
+    if ring_name and description:
         rings.append([ring_name, description])
 
-# Convert extracted data to a Pandas DataFrame
+# Create a DataFrame using Pandas
 df = pd.DataFrame(rings, columns=['Ring Name', 'Description'])
 
 # Save the DataFrame to a CSV file
